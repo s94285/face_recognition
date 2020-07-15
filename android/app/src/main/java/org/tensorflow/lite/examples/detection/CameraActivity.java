@@ -96,7 +96,7 @@ public abstract class CameraActivity extends AppCompatActivity
   private static final String KEY_USE_FACING = "use_facing";
   private Integer useFacing = null;
   private String cameraId = null;
-
+  //test
   protected Integer getCameraFacing() {
     return useFacing;
   }
