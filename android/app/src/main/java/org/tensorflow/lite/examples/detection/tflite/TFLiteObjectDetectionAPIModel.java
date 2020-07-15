@@ -20,6 +20,7 @@ import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.RectF;
 import android.os.Trace;
+import android.util.Log;
 import android.util.Pair;
 
 import java.io.BufferedReader;
@@ -38,6 +39,7 @@ import java.util.Map;
 import java.util.Vector;
 import org.tensorflow.lite.Interpreter;
 import org.tensorflow.lite.examples.detection.env.Logger;
+import org.tensorflow.lite.nnapi.NnApiDelegate;
 
 /**
  * Wrapper for frozen detection models trained using the Tensorflow Object Detection API:
@@ -90,6 +92,9 @@ public class TFLiteObjectDetectionAPIModel
 
   private Interpreter tfLite;
 
+  // use interpreter options to init interpreter
+  private final Interpreter.Options tfliteOptions = new Interpreter.Options();
+
 // Face Mask Detector Output
   private float[][] output;
 
@@ -141,13 +146,20 @@ public class TFLiteObjectDetectionAPIModel
     br.close();
 
     d.inputSize = inputSize;
+    d.tfliteOptions.setNumThreads(NUM_THREADS);
+//    d.tfliteOptions.addDelegate(new NnApiDelegate());
+    d.tfliteOptions.setUseNNAPI(false);
+    Log.d("TFLiteObjectDetection","Use NNAPI");
 
     try {
+      //TODO: Change Interpreter Constructor Function
+//      d.tfLite = new Interpreter(loadModelFile(assetManager, modelFilename),d.tfliteOptions);
       d.tfLite = new Interpreter(loadModelFile(assetManager, modelFilename));
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
 
+//    d.tfLite.modifyGraphWithDelegate();
     d.isModelQuantized = isQuantized;
     // Pre-allocate buffers.
     int numBytesPerChannel;
@@ -160,7 +172,7 @@ public class TFLiteObjectDetectionAPIModel
     d.imgData.order(ByteOrder.nativeOrder());
     d.intValues = new int[d.inputSize * d.inputSize];
 
-    d.tfLite.setNumThreads(NUM_THREADS);
+//    d.tfLite.setNumThreads(NUM_THREADS);
     d.outputLocations = new float[1][NUM_DETECTIONS][4];
     d.outputClasses = new float[1][NUM_DETECTIONS];
     d.outputScores = new float[1][NUM_DETECTIONS];
@@ -305,6 +317,8 @@ public class TFLiteObjectDetectionAPIModel
 
   @Override
   public void setUseNNAPI(boolean isChecked) {
+    Log.d("TFLiteObjectDetection","setUseNNAPI");
+    //TODO: Make use of NNAPI
     if (tfLite != null) tfLite.setUseNNAPI(isChecked);
   }
 }

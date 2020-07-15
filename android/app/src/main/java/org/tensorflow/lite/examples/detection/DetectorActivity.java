@@ -31,6 +31,7 @@ import android.hardware.camera2.CameraCharacteristics;
 import android.media.ImageReader.OnImageAvailableListener;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.util.Log;
 import android.util.Size;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
@@ -336,6 +337,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
   @Override
   protected void setUseNNAPI(final boolean isChecked) {
+    Log.d("DetectorActivity","SetUseNNAPI");
     runInBackground(() -> detector.setUseNNAPI(isChecked));
   }
 
