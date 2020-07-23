@@ -62,19 +62,19 @@
         android:id="@+id/fab_switchcam"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="start|top"
+        android:layout_gravity="end|top"
         android:tint="@android:color/white"
         android:src="@drawable/ic_baseline_switch_camera_24"
         android:layout_margin="16dp"
         />
 
 
-
+Kevin
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_add"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="end|top"
+        android:layout_gravity="start|top"
         android:tint="@android:color/white"
         android:src="@android:drawable/ic_input_add"
         android:layout_margin="16dp"

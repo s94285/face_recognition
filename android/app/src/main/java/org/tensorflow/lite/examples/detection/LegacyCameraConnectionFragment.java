@@ -23,6 +23,7 @@ import android.hardware.Camera.CameraInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.LayoutInflater;
@@ -68,6 +69,7 @@ public class LegacyCameraConnectionFragment extends Fragment {
             final SurfaceTexture texture, final int width, final int height) {
 
           int index = getCameraId();
+          Log.d("CameraId",Integer.toString(index));
           camera = Camera.open(index);
 
           try {
@@ -87,7 +89,7 @@ public class LegacyCameraConnectionFragment extends Fragment {
                 CameraConnectionFragment.chooseOptimalSize(
                     sizes, desiredSize.getWidth(), desiredSize.getHeight());
             parameters.setPreviewSize(previewSize.getWidth(), previewSize.getHeight());
-            camera.setDisplayOrientation(90);
+            camera.setDisplayOrientation(0);
             camera.setParameters(parameters);
             camera.setPreviewTexture(texture);
           } catch (IOException exception) {
@@ -96,9 +98,9 @@ public class LegacyCameraConnectionFragment extends Fragment {
 
           camera.setPreviewCallbackWithBuffer(imageListener);
           Camera.Size s = camera.getParameters().getPreviewSize();
-          camera.addCallbackBuffer(new byte[ImageUtils.getYUVByteSize(s.height, s.width)]);
+          camera.addCallbackBuffer(new byte[ImageUtils.getYUVByteSize(s.width, s.height)]);
 
-          textureView.setAspectRatio(s.height, s.width);
+          textureView.setAspectRatio(s.width, s.height);
 
           camera.startPreview();
         }
@@ -202,9 +204,11 @@ public class LegacyCameraConnectionFragment extends Fragment {
 
   private int getCameraId() {
     CameraInfo ci = new CameraInfo();
+    Log.d("getCameraId",Integer.toString(Camera.getNumberOfCameras()));
     for (int i = 0; i < Camera.getNumberOfCameras(); i++) {
       Camera.getCameraInfo(i, ci);
-      if (ci.facing == this.facing) return i;
+//      if (ci.facing == this.facing) return i;
+      return i; // use USB camera
     }
     return -1; // No camera found
   }

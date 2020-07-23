@@ -204,8 +204,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     previewWidth = size.getWidth();
     previewHeight = size.getHeight();
 
-    sensorOrientation = rotation - getScreenOrientation();
-    LOGGER.i("Camera orientation relative to screen canvas: %d", sensorOrientation);
+    sensorOrientation = rotation - getScreenOrientation(); //90 = 90 - 0 por: -180 = 90 - 270
+    LOGGER.i("Camera orientation relative to screen canvas: %d %d %d", sensorOrientation,rotation, getScreenOrientation());
 
     LOGGER.i("Initializing at size %dx%d", previewWidth, previewHeight);
     rgbFrameBitmap = Bitmap.createBitmap(previewWidth, previewHeight, Config.ARGB_8888);
@@ -559,8 +559,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
           }
 
         }
-
-        if (getCameraFacing() == CameraCharacteristics.LENS_FACING_FRONT) {
+        //TODO: change orientation
+        if (true || getCameraFacing() == CameraCharacteristics.LENS_FACING_FRONT) {
 
           // camera is frontal so the image is flipped horizontally
           // flips horizontally
