@@ -92,7 +92,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   //private static final int CROP_SIZE = 320;
   //private static final Size CROP_SIZE = new Size(320, 320);
 
-
+  private static final  int test=0;
   private static final boolean SAVE_PREVIEW_BITMAP = false;
   private static final float TEXT_SIZE_DIP = 10;
   OverlayView trackingOverlay;
@@ -480,8 +480,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     final Canvas cv = new Canvas(portraitBmp);
 
     // draws the original image in portrait mode.
-    cv.drawBitmap(rgbFrameBitmap, transform, null);
-
+    //cv.drawBitmap(rgbFrameBitmap, transform, null);
+    System.out.println("draw");
     final Canvas cvFace = new Canvas(faceBmp);
 
     boolean saved = false;
