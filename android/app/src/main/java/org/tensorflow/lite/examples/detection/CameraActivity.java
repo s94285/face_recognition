@@ -41,6 +41,7 @@ import androidx.appcompat.widget.SwitchCompat;
 import androidx.appcompat.widget.Toolbar;
 
 
+import android.util.Log;
 import android.util.Size;
 import android.view.Surface;
 import android.view.View;
@@ -150,8 +151,9 @@ public abstract class CameraActivity extends AppCompatActivity
             }
             //                int width = bottomSheetLayout.getMeasuredWidth();
             int height = gestureLayout.getMeasuredHeight();
-
+            int h =bottomSheetLayout.getMeasuredHeight();
             sheetBehavior.setPeekHeight(height);
+            sheetBehavior.setPeekHeight(h);
           }
         });
     sheetBehavior.setHideable(false);
@@ -589,6 +591,7 @@ public abstract class CameraActivity extends AppCompatActivity
 
   @Override
   public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+    //Log.d("ischecked",Boolean.toString(isChecked));
     setUseNNAPI(isChecked);
     if (isChecked) apiSwitchCompat.setText("NNAPI");
     else apiSwitchCompat.setText("TFLITE");
