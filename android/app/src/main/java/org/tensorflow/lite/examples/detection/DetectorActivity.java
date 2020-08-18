@@ -78,7 +78,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   // MobileFaceNet
   private static final int TF_OD_API_INPUT_SIZE = 112;
   private static final boolean TF_OD_API_IS_QUANTIZED = false;
-  private static final String TF_OD_API_MODEL_FILE = "MobileFaceNet_not_io_quant.tflite";
+  private static final String TF_OD_API_MODEL_FILE = "mobile_face_net.tflite";
 
 
   private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/labelmap.txt";
@@ -92,7 +92,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   //private static final int CROP_SIZE = 320;
   //private static final Size CROP_SIZE = new Size(320, 320);
 
-  private static final  int test=0;
+
   private static final boolean SAVE_PREVIEW_BITMAP = false;
   private static final float TEXT_SIZE_DIP = 10;
   OverlayView trackingOverlay;
@@ -480,8 +480,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     final Canvas cv = new Canvas(portraitBmp);
 
     // draws the original image in portrait mode.
-    //cv.drawBitmap(rgbFrameBitmap, transform, null);
-    System.out.println("draw");
+    cv.drawBitmap(rgbFrameBitmap, transform, null);
+
     final Canvas cvFace = new Canvas(faceBmp);
 
     boolean saved = false;

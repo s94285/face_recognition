@@ -163,7 +163,6 @@ public class TFLiteObjectDetectionAPIModel
     d.isModelQuantized = isQuantized;
     // Pre-allocate buffers.
     int numBytesPerChannel;
-    Log.d("isQuantized",Boolean.toString(isQuantized));
     if (isQuantized) {
       numBytesPerChannel = 1; // Quantized
     } else {
@@ -320,10 +319,6 @@ public class TFLiteObjectDetectionAPIModel
   public void setUseNNAPI(boolean isChecked) {
     Log.d("TFLiteObjectDetection","setUseNNAPI");
     //TODO: Make use of NNAPI
-    if (tfLite != null) {
-      tfLite.setUseNNAPI(isChecked);
-      Log.d("TFLiteObjectDetection",Boolean.toString(isChecked));
-    }
-
+    if (tfLite != null) tfLite.setUseNNAPI(isChecked);
   }
 }
