@@ -254,12 +254,13 @@ public class TFLiteObjectDetectionAPIModel
     tfLite.runForMultipleInputsOutputs(inputArray, outputMap);
     Trace.endSection();
 
-//    String res = "[";
-//    for (int i = 0; i < embeedings[0].length; i++) {
-//      res += embeedings[0][i];
-//      if (i < embeedings[0].length - 1) res += ", ";
-//    }
-//    res += "]";
+    String res = "[";
+    for (int i = 0; i < embeedings[0].length; i++) {
+      res += embeedings[0][i];
+      if (i < embeedings[0].length - 1) res += ", ";
+    }
+    res += "]";
+    Log.d("embedding",res);
 
 
     float distance = Float.MAX_VALUE;

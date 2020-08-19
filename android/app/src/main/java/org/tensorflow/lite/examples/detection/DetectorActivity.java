@@ -301,6 +301,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
               @Override
               public void onSuccess(List<Face> faces) {
                 if (faces.size() == 0) {
+                  Log.d("reset","reset");
                   updateResults(currTimestamp, new LinkedList<>());
                   return;
                 }
@@ -416,7 +417,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   }
 
   private void updateResults(long currTimestamp, final List<SimilarityClassifier.Recognition> mappedRecognitions) {
-
+    Log.d("updating","update");
     tracker.trackResults(mappedRecognitions, currTimestamp);
     trackingOverlay.postInvalidate();
     computingDetection = false;
@@ -427,6 +428,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
        LOGGER.i("Adding results");
        SimilarityClassifier.Recognition rec = mappedRecognitions.get(0);
        if (rec.getExtra() != null) {
+         Log.d("Dialog","dialog");
          showAddFaceDialog(rec);
        }
 
