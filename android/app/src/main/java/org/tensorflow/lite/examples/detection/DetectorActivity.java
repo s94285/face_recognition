@@ -78,7 +78,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   // MobileFaceNet
   private static final int TF_OD_API_INPUT_SIZE = 112;
   private static final boolean TF_OD_API_IS_QUANTIZED = false;
-  private static final String TF_OD_API_MODEL_FILE = "mobile_face_net.tflite";
+  private static final String TF_OD_API_MODEL_FILE = "MobileFaceNet_normalized_io_not_quant.tflite";
 
 
   private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/labelmap.txt";
@@ -548,7 +548,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 //          }
 
           float conf = result.getDistance();
-          if (conf < 1.0f) {
+          if (conf < 50.0f) {
 
             confidence = conf;
             label = result.getTitle();
