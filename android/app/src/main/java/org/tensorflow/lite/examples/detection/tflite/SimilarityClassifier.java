@@ -18,6 +18,7 @@ package org.tensorflow.lite.examples.detection.tflite;
 import android.graphics.Bitmap;
 import android.graphics.RectF;
 import java.util.List;
+import java.io.Serializable;
 
 /** Generic interface for interacting with different recognition engines. */
 public interface SimilarityClassifier {
@@ -30,14 +31,16 @@ public interface SimilarityClassifier {
 
   String getStatString();
 
-  void close();
+  String[] getName();
+
+  void del(String which);
 
   void setNumThreads(int num_threads);
 
   void setUseNNAPI(boolean isChecked);
 
   /** An immutable result returned by a Classifier describing what was recognized. */
-  public class Recognition {
+  public class Recognition implements Serializable{
     /**
      * A unique identifier for what has been recognized. Specific to the class, not the instance of
      * the object.
@@ -54,11 +57,11 @@ public interface SimilarityClassifier {
     private Object extra;
 
     /** Optional location within the source image for the location of the recognized object. */
-    private RectF location;
+    private transient RectF location;
     private Integer color;
-    private Bitmap crop;
+    private transient Bitmap crop;
 
-    public Recognition(
+    public Recognition (
             final String id, final String title, final Float distance, final RectF location) {
       this.id = id;
       this.title = title;

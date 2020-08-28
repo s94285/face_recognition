@@ -19,21 +19,27 @@ import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.RectF;
+import android.os.Environment;
 import android.os.Trace;
 import android.util.Log;
 import android.util.Pair;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
@@ -97,13 +103,40 @@ public class TFLiteObjectDetectionAPIModel
 
 // Face Mask Detector Output
   private float[][] output;
-
+  private final String root =
+          Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "tensorflow/register.ser";
   private HashMap<String, Recognition> registered = new HashMap<>();
   public void register(String name, Recognition rec) {
-      registered.put(name, rec);
+    registered.put(name, rec);
+    try {
+      FileOutputStream fileOut =
+              new FileOutputStream(root);
+      ObjectOutputStream out = new ObjectOutputStream(fileOut);
+      out.writeObject(registered);
+      out.close();
+      fileOut.close();
+      System.out.printf("Serialized data is saved in storage/emulated/0/tensorflow/register.ser");
+    } catch (IOException i) {
+      i.printStackTrace();
+    }
   }
 
-  private TFLiteObjectDetectionAPIModel() {}
+  private TFLiteObjectDetectionAPIModel() {
+    try {
+      FileInputStream fileIn = new FileInputStream(root);
+      ObjectInputStream in = new ObjectInputStream(fileIn);
+      registered = (HashMap<String, Recognition>) in.readObject();
+      in.close();
+      fileIn.close();
+    } catch (IOException i) {
+      i.printStackTrace();
+      return;
+    } catch (ClassNotFoundException c) {
+      System.out.println("file not found");
+      c.printStackTrace();
+      return;
+    }
+  }
 
   /** Memory-map the model file in Assets. */
   private static MappedByteBuffer loadModelFile(AssetManager assets, String modelFilename)
@@ -136,11 +169,13 @@ public class TFLiteObjectDetectionAPIModel
     final TFLiteObjectDetectionAPIModel d = new TFLiteObjectDetectionAPIModel();
 
     String actualFilename = labelFilename.split("file:///android_asset/")[1];
+    Log.d("ActualFilename",actualFilename);
     InputStream labelsInput = assetManager.open(actualFilename);
     BufferedReader br = new BufferedReader(new InputStreamReader(labelsInput));
     String line;
+
     while ((line = br.readLine()) != null) {
-      LOGGER.w(line);
+      Log.d("name",line);
       d.labels.add(line);
     }
     br.close();
@@ -203,7 +238,6 @@ public class TFLiteObjectDetectionAPIModel
     return ret;
 
   }
-
 
   @Override
   public List<Recognition> recognizeImage(final Bitmap bitmap, boolean storeExtra) {
@@ -277,8 +311,6 @@ public class TFLiteObjectDetectionAPIModel
             distance = nearest.second;
 
             LOGGER.i("nearest: " + name + " - distance: " + distance);
-
-
         }
     }
 
@@ -306,12 +338,38 @@ public class TFLiteObjectDetectionAPIModel
 
   @Override
   public String getStatString() {
+
     return "";
   }
 
   @Override
-  public void close() {}
+  public String[] getName() {
+    Iterator iterator = registered.keySet().iterator();
+    List<String> list = new ArrayList<String>();
+    while (iterator.hasNext()){
+      String key = (String)iterator.next();
+      System.out.println(key+"="+registered.get(key));
+      list.add(key);
+    }
+    String[] name = list.toArray(new String[0]);
+    return name;
+  }
+  public void del(String which){
+    registered.remove(which);
+    try {
+      FileOutputStream fileOut =
+              new FileOutputStream(root);
+      ObjectOutputStream out = new ObjectOutputStream(fileOut);
+      out.writeObject(registered);
+      out.close();
+      fileOut.close();
+      System.out.printf("Serialized data is saved in storage/emulated/0/tensorflow/register.ser");
+    } catch (IOException i) {
+      i.printStackTrace();
+    }
+  }
 
+  @Override
   public void setNumThreads(int num_threads) {
     if (tfLite != null) tfLite.setNumThreads(num_threads);
   }

@@ -16,8 +16,11 @@
 
 package org.tensorflow.lite.examples.detection;
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
@@ -29,13 +32,18 @@ import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.hardware.camera2.CameraCharacteristics;
 import android.media.ImageReader.OnImageAvailableListener;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.SystemClock;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.util.Size;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -49,6 +57,9 @@ import com.google.mlkit.vision.face.FaceDetection;
 import com.google.mlkit.vision.face.FaceDetector;
 import com.google.mlkit.vision.face.FaceDetectorOptions;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -93,7 +104,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   //private static final Size CROP_SIZE = new Size(320, 320);
 
 
-  private static final boolean SAVE_PREVIEW_BITMAP = false;
+  private static final boolean SAVE_PREVIEW_BITMAP = true;
   private static final float TEXT_SIZE_DIP = 10;
   OverlayView trackingOverlay;
   private Integer sensorOrientation;
@@ -128,7 +139,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private Bitmap faceBmp = null;
 
   private FloatingActionButton fabAdd;
-
+  private FloatingActionButton fabchoose;
   //private HashMap<String, Classifier.Recognition> knownFaces = new HashMap<>();
 
 
@@ -143,7 +154,14 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
         onAddClick();
       }
     });
+    fabchoose = findViewById(R.id.fab_choose);
+    fabchoose.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        personlist();
 
+      }
+    });
     // Real-time contour detection of multiple faces
     FaceDetectorOptions options =
             new FaceDetectorOptions.Builder()
@@ -158,7 +176,9 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     faceDetector = detector;
 
 
-    //checkWritePermission();
+
+
+      //checkWritePermission();
 
   }
 
@@ -169,6 +189,43 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     addPending = true;
     //Toast.makeText(this, "click", Toast.LENGTH_LONG ).show();
 
+  }
+  private  void personlist(){
+
+    String[] name = detector.getName();
+
+    AlertDialog.Builder dialog_list = new AlertDialog.Builder(this);
+    dialog_list.setTitle("Delete face");
+
+    dialog_list.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+      @Override
+      public void onClick(DialogInterface dialogInterface, int i) {
+
+      }
+    });
+    dialog_list.setItems(name, new DialogInterface.OnClickListener(){
+      @Override
+
+      //只要你在onClick處理事件內，使用which參數，就可以知道按下陣列裡的哪一個了
+      public void onClick(DialogInterface dialog, int which) {
+        // TODO Auto-generated method stub
+        Toast.makeText(getApplicationContext(), "你刪除的是" + name[which], Toast.LENGTH_SHORT).show();
+        detector.del(name[which]);
+
+      }
+    });
+    dialog_list.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+      @Override
+      public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+
+      }
+
+      @Override
+      public void onNothingSelected(AdapterView<?> adapterView) {
+
+      }
+    });
+    dialog_list.show();
   }
 
   @Override
@@ -290,9 +347,9 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     final Canvas canvas = new Canvas(croppedBitmap);
     canvas.drawBitmap(rgbFrameBitmap, frameToCropTransform, null);
     // For examining the actual TF input.
-    if (SAVE_PREVIEW_BITMAP) {
-      ImageUtils.saveBitmap(croppedBitmap);
-    }
+//    if (SAVE_PREVIEW_BITMAP) {
+//      ImageUtils.saveBitmap(croppedBitmap);
+//    }
 
     InputImage image = InputImage.fromBitmap(croppedBitmap, 0);
     faceDetector
@@ -309,8 +366,14 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                         new Runnable() {
                           @Override
                           public void run() {
-                            onFacesDetected(currTimestamp, faces, addPending);
-                            addPending = false;
+                            if(addPending){
+                              onFacesDetected(currTimestamp, faces, addPending);
+                              addPending = false;
+                            }else{
+                              onFacesDetected(currTimestamp, faces, addPending);
+                            }
+//                            onFacesDetected(currTimestamp, faces, addPending);
+//                            addPending = false;
                           }
                         });
               }
@@ -447,7 +510,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   }
 
   private void onFacesDetected(long currTimestamp, List<Face> faces, boolean add) {
-
+    Log.d("addpending",Boolean.toString(add));
     cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
     final Canvas canvas = new Canvas(cropCopyBitmap);
     final Paint paint = new Paint();
@@ -531,6 +594,10 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                             (int) faceBB.top,
                             (int) faceBB.width(),
                             (int) faceBB.height());
+
+          if (SAVE_PREVIEW_BITMAP) {
+            ImageUtils.saveBitmap(crop);
+          }
         }
 
         final long startTime = SystemClock.uptimeMillis();
@@ -548,10 +615,11 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 //          }
 
           float conf = result.getDistance();
-          if (conf < 50.0f) {
+          if (conf < 60.0f) {
 
             confidence = conf;
             label = result.getTitle();
+            Log.d("titel",label);
             if (result.getId().equals("0")) {
               color = Color.GREEN;
             }
