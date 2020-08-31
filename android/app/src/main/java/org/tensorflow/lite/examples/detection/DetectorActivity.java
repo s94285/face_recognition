@@ -193,10 +193,10 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private  void personlist(){
 
     String[] name = detector.getName();
-
     AlertDialog.Builder dialog_list = new AlertDialog.Builder(this);
     dialog_list.setTitle("Delete face");
-
+    View v = getLayoutInflater().inflate(R.layout.registered_list,null);
+//    dialog_list.setView(v);
     dialog_list.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
       @Override
       public void onClick(DialogInterface dialogInterface, int i) {
@@ -211,17 +211,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
         // TODO Auto-generated method stub
         Toast.makeText(getApplicationContext(), "你刪除的是" + name[which], Toast.LENGTH_SHORT).show();
         detector.del(name[which]);
-
-      }
-    });
-    dialog_list.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-      @Override
-      public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-
-      }
-
-      @Override
-      public void onNothingSelected(AdapterView<?> adapterView) {
 
       }
     });
@@ -358,7 +347,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
               @Override
               public void onSuccess(List<Face> faces) {
                 if (faces.size() == 0) {
-                  Log.d("reset","reset");
                   updateResults(currTimestamp, new LinkedList<>());
                   return;
                 }
