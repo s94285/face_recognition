@@ -51,8 +51,9 @@ public class ImageUtils {
    * @param bitmap The bitmap to save.
    */
   public static void saveBitmap(final Bitmap bitmap) {
+
     saveBitmap(bitmap, "preview.png");
-//    System.out.println("saveddddd");
+
   }
 
   /**
@@ -64,7 +65,7 @@ public class ImageUtils {
   public static void saveBitmap(final Bitmap bitmap, final String filename) {
 
     final String root =
-        Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "tensorflow";
+        Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "tensorflow/bmp";
     LOGGER.i("Saving %dx%d bitmap to %s.", bitmap.getWidth(), bitmap.getHeight(), root);
     final File myDir = new File(root);
 
@@ -72,7 +73,7 @@ public class ImageUtils {
       LOGGER.i("Make dir failed");
     }
 
-    final String fname = filename;
+    final String fname = filename+".png";
     final File file = new File(myDir, fname);
     if (file.exists()) {
       file.delete();

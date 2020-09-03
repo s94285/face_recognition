@@ -84,7 +84,7 @@ Kevin
         android:id="@+id/fab_choose"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center|top"
+        android:layout_gravity="center|right|top"
         android:layout_margin="16dp"
         android:src="@drawable/ic_baseline_emoji_emotions_24"
         android:tint="@android:color/white" />

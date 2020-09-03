@@ -18,11 +18,15 @@ package org.tensorflow.lite.examples.detection;
 
 import android.Manifest;
 import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
@@ -30,6 +34,7 @@ import android.graphics.Paint;
 import android.graphics.Paint.Style;
 import android.graphics.RectF;
 import android.graphics.Typeface;
+import android.graphics.drawable.ColorDrawable;
 import android.hardware.camera2.CameraCharacteristics;
 import android.media.ImageReader.OnImageAvailableListener;
 import android.net.Uri;
@@ -41,13 +46,22 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.util.Size;
 import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.view.LayoutInflater;
+
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -58,20 +72,24 @@ import com.google.mlkit.vision.face.FaceDetector;
 import com.google.mlkit.vision.face.FaceDetectorOptions;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.zip.Inflater;
+
 import org.tensorflow.lite.examples.detection.customview.OverlayView;
 import org.tensorflow.lite.examples.detection.customview.OverlayView.DrawCallback;
+import org.tensorflow.lite.examples.detection.dummy.DummyContent;
 import org.tensorflow.lite.examples.detection.env.BorderedText;
 import org.tensorflow.lite.examples.detection.env.ImageUtils;
 import org.tensorflow.lite.examples.detection.env.Logger;
 import org.tensorflow.lite.examples.detection.tflite.SimilarityClassifier;
 import org.tensorflow.lite.examples.detection.tflite.TFLiteObjectDetectionAPIModel;
 import org.tensorflow.lite.examples.detection.tracking.MultiBoxTracker;
-
+import org.tensorflow.lite.examples.detection.ItemFragment;
 /**
  * An activity that uses a TensorFlowMultiBoxDetector and ObjectTracker to detect and then track
  * objects.
@@ -89,7 +107,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   // MobileFaceNet
   private static final int TF_OD_API_INPUT_SIZE = 112;
   private static final boolean TF_OD_API_IS_QUANTIZED = false;
-  private static final String TF_OD_API_MODEL_FILE = "MobileFaceNet_normalized_io_not_quant.tflite";
+  private static final String TF_OD_API_MODEL_FILE = "mobile_face_net.tflite";
 
 
   private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/labelmap.txt";
@@ -99,7 +117,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.5f;
   private static final boolean MAINTAIN_ASPECT = false;
 
-  private static final Size DESIRED_PREVIEW_SIZE = new Size(640, 480);
+  private static final Size DESIRED_PREVIEW_SIZE = new Size(640, 360);
   //private static final int CROP_SIZE = 320;
   //private static final Size CROP_SIZE = new Size(320, 320);
 
@@ -137,7 +155,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private Bitmap portraitBmp = null;
   // here the face is cropped and drawn
   private Bitmap faceBmp = null;
-
   private FloatingActionButton fabAdd;
   private FloatingActionButton fabchoose;
   //private HashMap<String, Classifier.Recognition> knownFaces = new HashMap<>();
@@ -159,7 +176,11 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       @Override
       public void onClick(View view) {
         personlist();
-
+//        FragmentManager fragmentManager = getFragmentManager();
+//        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+//        ItemFragment fragment = new ItemFragment();
+//        fragmentTransaction.add(R.id.container, fragment);
+//        fragmentTransaction.commit();
       }
     });
     // Real-time contour detection of multiple faces
@@ -193,28 +214,67 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private  void personlist(){
 
     String[] name = detector.getName();
+    Log.d("person", String.valueOf(name));
     AlertDialog.Builder dialog_list = new AlertDialog.Builder(this);
     dialog_list.setTitle("Delete face");
-    View v = getLayoutInflater().inflate(R.layout.registered_list,null);
-//    dialog_list.setView(v);
-    dialog_list.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-      @Override
-      public void onClick(DialogInterface dialogInterface, int i) {
+    LayoutInflater inflater = LayoutInflater.from(this);
+    LinearLayout linearLayout=new LinearLayout(this);
+    View convertView = (View)inflater.inflate(R.layout.fragment_item_list, null);
+    RecyclerView list = convertView.findViewById(R.id.list);
+    linearLayout.addView(convertView);
+    linearLayout.setGravity(Gravity.CENTER);
+    DividerItemDecoration DID=new DividerItemDecoration(list.getContext(), DividerItemDecoration.VERTICAL);
+    DID.setDrawable(new ColorDrawable(Color.BLACK));
+    list.addItemDecoration(DID);
+//    list.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
+    DummyContent dum=new DummyContent();
 
+    Bitmap bitmap=null;
+    String path = Environment.getExternalStorageDirectory().toString()+"/tensorflow/bmp";
+    Log.d("Files", "Path: " + path);
+    File directory = new File(path);
+    File[] files = directory.listFiles();
+    Log.d("Files", "Size: "+ files.length);
+
+    for(int i=0;i<files.length;i++){
+      Log.d("Files", "FileName:" + files[i].getName());
+      String path1=path+"/"+name[i]+".png";
+      File f= new File(path1);
+      BitmapFactory.Options options = new BitmapFactory.Options();
+      options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+      try {
+        bitmap = BitmapFactory.decodeStream(new FileInputStream(f), null, options);
+      } catch (FileNotFoundException e) {
+        e.printStackTrace();
       }
-    });
-    dialog_list.setItems(name, new DialogInterface.OnClickListener(){
-      @Override
 
-      //只要你在onClick處理事件內，使用which參數，就可以知道按下陣列裡的哪一個了
-      public void onClick(DialogInterface dialog, int which) {
-        // TODO Auto-generated method stub
-        Toast.makeText(getApplicationContext(), "你刪除的是" + name[which], Toast.LENGTH_SHORT).show();
-        detector.del(name[which]);
+      dum.ITEMS.add(new DummyContent.DummyItem(name[i],String.valueOf(i),Bitmap.createScaledBitmap(bitmap,100,100,false)));
+    }
 
-      }
-    });
-    dialog_list.show();
+    list.setAdapter(new MyItemRecyclerViewAdapter(dum.ITEMS,detector));
+    dialog_list.setView(linearLayout); // setView
+//    dialog_list.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+//      @Override
+//      public void onClick(DialogInterface dialogInterface, int i) {
+//
+//      }
+//    });
+//    dialog_list.setItems(name, new DialogInterface.OnClickListener(){
+//      @Override
+//
+//      //只要你在onClick處理事件內，使用which參數，就可以知道按下陣列裡的哪一個了
+//      public void onClick(DialogInterface dialog, int which) {
+//        // TODO Auto-generated method stub
+//        Toast.makeText(getApplicationContext(), "你刪除的是" + name[which], Toast.LENGTH_SHORT).show();
+//
+//
+//      }
+//    });
+    Dialog dialog=dialog_list.create();
+
+    dialog.show();
+    dialog.getWindow().setLayout(800, ViewGroup.LayoutParams.WRAP_CONTENT);
+
   }
 
   @Override
@@ -458,6 +518,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
               return;
           }
           detector.register(name, rec);
+
+          ImageUtils.saveBitmap(rec.getCrop(),name);
           //knownFaces.put(name, rec);
           dlg.dismiss();
       }
@@ -477,10 +539,13 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
     if (mappedRecognitions.size() > 0) {
        LOGGER.i("Adding results");
-       SimilarityClassifier.Recognition rec = mappedRecognitions.get(0);
-       if (rec.getExtra() != null) {
-         Log.d("Dialog","dialog");
-         showAddFaceDialog(rec);
+       for(int i=0;i< mappedRecognitions.size();i++){
+         SimilarityClassifier.Recognition rec = mappedRecognitions.get(i);
+         if (rec.getExtra() != null&&rec.getColor()!=Color.GREEN) {
+           Log.d("Dialog","dialog");
+           showAddFaceDialog(rec);
+         }
+
        }
 
     }
@@ -577,14 +642,14 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
         Bitmap crop = null;
 
         if (add) {
-          crop = Bitmap.createBitmap(portraitBmp,
+          crop = Bitmap.createBitmap(portraitBmp,//sometimes jump errors
                             (int) faceBB.left,
                             (int) faceBB.top,
                             (int) faceBB.width(),
                             (int) faceBB.height());
 
           if (SAVE_PREVIEW_BITMAP) {
-            ImageUtils.saveBitmap(crop);
+            cropCopyBitmap=faceBmp;
           }
         }
 
@@ -603,13 +668,14 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 //          }
 
           float conf = result.getDistance();
-          if (conf < 60.0f) {
+          if (conf < 1.0f) {
 
             confidence = conf;
             label = result.getTitle();
             Log.d("titel",label);
             if (result.getId().equals("0")) {
               color = Color.GREEN;
+
             }
             else {
               color = Color.RED;
@@ -617,6 +683,15 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
           }
 
         }
+        final SimilarityClassifier.Recognition result_add = new SimilarityClassifier.Recognition(
+                "0", label, confidence, boundingBox);
+
+        result_add.setColor(color);
+        result_add.setLocation(boundingBox);
+        result_add.setExtra(extra);
+        result_add.setCrop(crop);
+        mappedRecognitions.add(result_add);
+
         //TODO: change orientation
         if (true || getCameraFacing() == CameraCharacteristics.LENS_FACING_FRONT) {
 
@@ -634,14 +709,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
         }
 
-        final SimilarityClassifier.Recognition result = new SimilarityClassifier.Recognition(
-                "0", label, confidence, boundingBox);
-
-        result.setColor(color);
-        result.setLocation(boundingBox);
-        result.setExtra(extra);
-        result.setCrop(crop);
-        mappedRecognitions.add(result);
 
       }
 
