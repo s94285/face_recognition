@@ -107,7 +107,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   // MobileFaceNet
   private static final int TF_OD_API_INPUT_SIZE = 112;
   private static final boolean TF_OD_API_IS_QUANTIZED = false;
-  private static final String TF_OD_API_MODEL_FILE = "mobile_face_net.tflite";
+  private static final String TF_OD_API_MODEL_FILE = "MobileFaceNet_normalized_io_not_quant.tflite";
 
 
   private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/labelmap.txt";
@@ -253,12 +253,12 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
     list.setAdapter(new MyItemRecyclerViewAdapter(dum.ITEMS,detector));
     dialog_list.setView(linearLayout); // setView
-//    dialog_list.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-//      @Override
-//      public void onClick(DialogInterface dialogInterface, int i) {
-//
-//      }
-//    });
+    dialog_list.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+      @Override
+      public void onClick(DialogInterface dialogInterface, int i) {
+
+      }
+    });
 //    dialog_list.setItems(name, new DialogInterface.OnClickListener(){
 //      @Override
 //
@@ -271,7 +271,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 //      }
 //    });
     Dialog dialog=dialog_list.create();
-
     dialog.show();
     dialog.getWindow().setLayout(800, ViewGroup.LayoutParams.WRAP_CONTENT);
 
@@ -642,15 +641,21 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
         Bitmap crop = null;
 
         if (add) {
+          //先檢查這個bitmap是不是在邊緣
+          if ((int) faceBB.left + (int) faceBB.width() > portraitBmp.getWidth()) {
+            break;
+          }
+          if ((int) faceBB.top + (int) faceBB.height() > portraitBmp.getHeight()) {
+            break;
+          }
+          if((int) faceBB.left < 0 || (int) faceBB.top < 0)
+            break;
           crop = Bitmap.createBitmap(portraitBmp,//sometimes jump errors
                             (int) faceBB.left,
                             (int) faceBB.top,
                             (int) faceBB.width(),
                             (int) faceBB.height());
 
-          if (SAVE_PREVIEW_BITMAP) {
-            cropCopyBitmap=faceBmp;
-          }
         }
 
         final long startTime = SystemClock.uptimeMillis();
@@ -668,7 +673,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 //          }
 
           float conf = result.getDistance();
-          if (conf < 1.0f) {
+          if (conf < 50.0f) {
 
             confidence = conf;
             label = result.getTitle();
