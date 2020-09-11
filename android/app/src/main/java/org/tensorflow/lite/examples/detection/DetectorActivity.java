@@ -107,7 +107,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   // MobileFaceNet
   private static final int TF_OD_API_INPUT_SIZE = 112;
   private static final boolean TF_OD_API_IS_QUANTIZED = false;
-  private static final String TF_OD_API_MODEL_FILE = "MobileFaceNet_normalized_io_not_quant.tflite";
+  private static final String TF_OD_API_MODEL_FILE = "mobile_face_net.tflite";
 
 
   private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/labelmap.txt";
@@ -398,7 +398,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 //    if (SAVE_PREVIEW_BITMAP) {
 //      ImageUtils.saveBitmap(croppedBitmap);
 //    }
-
+    final long[] startTime = {SystemClock.uptimeMillis()};
     InputImage image = InputImage.fromBitmap(croppedBitmap, 0);
     faceDetector
             .process(image)
@@ -406,9 +406,12 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
               @Override
               public void onSuccess(List<Face> faces) {
                 if (faces.size() == 0) {
+
                   updateResults(currTimestamp, new LinkedList<>());
                   return;
                 }
+                Log.d("mlkit process time",Long.toString(SystemClock.uptimeMillis()- startTime[0]));
+                startTime[0] =SystemClock.uptimeMillis();
                 runInBackground(
                         new Runnable() {
                           @Override
@@ -563,19 +566,18 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
   private void onFacesDetected(long currTimestamp, List<Face> faces, boolean add) {
     Log.d("addpending",Boolean.toString(add));
-    cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
-    final Canvas canvas = new Canvas(cropCopyBitmap);
+//    cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
     final Paint paint = new Paint();
     paint.setColor(Color.RED);
     paint.setStyle(Style.STROKE);
     paint.setStrokeWidth(2.0f);
 
-    float minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
-    switch (MODE) {
-      case TF_OD_API:
-        minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
-        break;
-    }
+//    float minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
+//    switch (MODE) {
+//      case TF_OD_API:
+//        minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
+//        break;
+//    }
 
     final List<SimilarityClassifier.Recognition> mappedRecognitions =
             new LinkedList<SimilarityClassifier.Recognition>();
@@ -594,12 +596,12 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
             targetW,
             targetH,
             sensorOrientation);
-    final Canvas cv = new Canvas(portraitBmp);
+    final Canvas cv = new Canvas(portraitBmp);//640*360
 
     // draws the original image in portrait mode.
-    cv.drawBitmap(rgbFrameBitmap, transform, null);
+    cv.drawBitmap(rgbFrameBitmap, transform, null);//640*360
 
-    final Canvas cvFace = new Canvas(faceBmp);
+    final Canvas cvFace = new Canvas(faceBmp);//112*112
 
     boolean saved = false;
 
@@ -676,6 +678,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
           if (conf < 50.0f) {
 
             confidence = conf;
+            confidence/=50.0f;
+//            confidence=1-confidence;
             label = result.getTitle();
             Log.d("titel",label);
             if (result.getId().equals("0")) {

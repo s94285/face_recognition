@@ -19,6 +19,7 @@ import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.RectF;
+import android.os.Build;
 import android.os.Environment;
 import android.os.Trace;
 import android.util.Log;
@@ -35,9 +36,14 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.CharBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -45,6 +51,7 @@ import java.util.Map;
 import java.util.Vector;
 import org.tensorflow.lite.Interpreter;
 import org.tensorflow.lite.examples.detection.env.Logger;
+import org.tensorflow.lite.gpu.GpuDelegate;
 import org.tensorflow.lite.nnapi.NnApiDelegate;
 
 /**
@@ -182,7 +189,11 @@ public class TFLiteObjectDetectionAPIModel
 
     d.inputSize = inputSize;
     d.tfliteOptions.setNumThreads(NUM_THREADS);
-//    d.tfliteOptions.addDelegate(new NnApiDelegate());
+    NnApiDelegate nnApiDelegate = null;
+    nnApiDelegate = new NnApiDelegate();
+    d.tfliteOptions.addDelegate(nnApiDelegate);
+//    GpuDelegate delegate = new GpuDelegate();
+//    d.tfliteOptions.addDelegate(delegate);
     d.tfliteOptions.setUseNNAPI(false);
     Log.d("TFLiteObjectDetection","Use NNAPI");
 
@@ -275,6 +286,7 @@ public class TFLiteObjectDetectionAPIModel
 
     Trace.endSection();
 
+
 // Here outputMap is changed to fit the Face Mask detector
     Map<Integer, Object> outputMap = new HashMap<>();
 
@@ -294,7 +306,7 @@ public class TFLiteObjectDetectionAPIModel
       if (i < embeedings[0].length - 1) res += ", ";
     }
     res += "]";
-    Log.d("embedding",res);
+    Log.d("embedding",Integer.toString(embeedings[0].length));//192
 
 
     float distance = Float.MAX_VALUE;
